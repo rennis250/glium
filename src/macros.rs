@@ -60,9 +60,9 @@ macro_rules! uniform {
 
     ($field1:ident: $value1:expr, $($field:ident: $value:expr),+) => {
         {
-            let uniforms = $crate::uniforms::UniformsStorage::new(stringify!($field1), $value1);
+            let mut uniforms = $crate::uniforms::UniformsStorage::new(stringify!($field1), $value1);
             $(
-                let uniforms = uniforms.add(stringify!($field), $value);
+                uniforms.add(stringify!($field), $value);
             )+
             uniforms
         }

@@ -1,55 +1,54 @@
-use uniforms::{Uniforms, UniformValue, AsUniformValue};
-
-/// Object that can be used when you don't have any uniforms.
-#[derive(Debug, Copy, Clone)]
-pub struct EmptyUniforms;
-
-impl Uniforms for EmptyUniforms {
-    #[inline]
-    fn visit_values<'a, F: FnMut(&str, UniformValue<'a>)>(&'a self, _: F) {
-    }
-}
+use uniforms::{Uniforms, UniformValue};
 
 /// Stores uniforms.
-pub struct UniformsStorage<'n, T, R> where T: AsUniformValue, R: Uniforms {
-    name: &'n str,
-    value: T,
-    rest: R,
+#[derive(Clone)]
+pub struct UniformsStorage<'n> {
+    map: Vec<(String, UniformValue<'n>)>
 }
 
-impl<'n, T> UniformsStorage<'n, T, EmptyUniforms> where T: AsUniformValue {
+impl<'n> UniformsStorage<'n> {
     /// Builds a new storage with a value.
     #[inline]
-    pub fn new(name: &'n str, value: T)
-               -> UniformsStorage<'n, T, EmptyUniforms>
-    {
+    pub fn new(name: &'n str, value: UniformValue<'n>) -> UniformsStorage<'n> {
         UniformsStorage {
-            name: name,
-            value: value,
-            rest: EmptyUniforms,
+        	map: vec![(name.to_string(), value)],
+        }
+    }
+    
+    /// Builds a new storage with a Vec.
+    #[inline]
+    pub fn new_from_vec(values: &Vec<(String, UniformValue<'n>)>) -> UniformsStorage<'n> {
+        UniformsStorage {
+        	map: values.clone(),
         }
     }
 }
 
-impl<'n, T, R> UniformsStorage<'n, T, R> where T: AsUniformValue, R: Uniforms {
+impl<'n> UniformsStorage<'n> {
     /// Adds a value to the storage.
     #[inline]
-    pub fn add<U>(self, name: &'n str, value: U)
-                  -> UniformsStorage<'n, U, UniformsStorage<'n, T, R>>
-                  where U: AsUniformValue
+    pub fn add(&mut self, name: &'n str, value: UniformValue<'n>) -> Self
     {
-        UniformsStorage {
-            name: name,
-            value: value,
-            rest: self,
-        }
-    }
+    	let mut found_it = false;
+		for kv in self.map.iter_mut() {
+			if kv.0 == name {
+				*kv = (name.to_string(), value);
+				found_it = true;
+				break;
+			}
+		}
+		if !found_it {
+			self.map.push((name.to_string(), value));
+		}
+		(*self).clone()
+	}
 }
 
-impl<'n, T, R> Uniforms for UniformsStorage<'n, T, R> where T: AsUniformValue, R: Uniforms {
+impl<'n> Uniforms for UniformsStorage<'n> {
     #[inline]
     fn visit_values<'a, F: FnMut(&str, UniformValue<'a>)>(&'a self, mut output: F) {
-        output(self.name, self.value.as_uniform_value());
-        self.rest.visit_values(output);
+    	for kv in self.map.iter() {
+	        output(&kv.0, kv.1);
+	    }
     }
 }

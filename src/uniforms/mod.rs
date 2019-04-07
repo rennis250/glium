@@ -143,7 +143,7 @@ let program = glium::Program::from_source(&display,
 pub use self::buffer::UniformBuffer;
 pub use self::sampler::{SamplerWrapFunction, MagnifySamplerFilter, MinifySamplerFilter};
 pub use self::sampler::{Sampler, SamplerBehavior};
-pub use self::uniforms::{EmptyUniforms, UniformsStorage};
+pub use self::uniforms::{UniformsStorage};
 pub use self::value::{UniformValue, UniformType};
 
 use std::error::Error;
